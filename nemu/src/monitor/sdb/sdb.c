@@ -15,6 +15,7 @@
 
 #include "sdb.h"
 #include "debug.h"
+#include "memory/paddr.h"
 #include <cpu/cpu.h>
 #include <isa.h>
 #include <readline/history.h>
@@ -69,12 +70,26 @@ static int cmd_si(char *args) {
     long num = strtol(arg, &endptr, 10);
     if (*endptr != '\0') {
         Log("failed to convert str to integer.");
-        return 0;
+        return -1;
     }
     cpu_exec(num);
     return 0;
 }
 
+static int cmd_x(char *args) {
+    int number;
+    unsigned int address;
+
+    if (sscanf(args, "%d %x",&number, &address) != 2) {
+        fprintf(stderr, "输入格式错误，应为：<指令> <整数> <十六进制地址>\n");
+        return -1;
+    }
+    for (int i = 0; i < number; i++) {
+        word_t w = paddr_read(address + 4 * i, 4);
+        printf("0x%08x\n" ,w);
+    }
+    return 0;
+}
 static int cmd_q(char *args) { return -1; }
 
 static int cmd_help(char *args);
@@ -87,9 +102,10 @@ static struct {
     {"help", "Display information about all supported commands", cmd_help},
     {"c", "Continue the execution of the program", cmd_c},
     {"q", "Exit NEMU", cmd_q},
-    {"s", "step in", cmd_si},
-    {"si", "step in", cmd_si},
+    {"s", "Step in", cmd_si},
+    {"si", "Step in", cmd_si},
     {"info", "Display register/watchpoint info", cmd_info},
+    {"x", "Print value stored in memmory", cmd_x},
 
     /* TODO: Add more commands */
 
