@@ -19,6 +19,7 @@
 #include <isa.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <stdio.h>
 
 static int is_batch_mode = false;
 
@@ -43,6 +44,16 @@ static char *rl_gets() {
     return line_read;
 }
 
+static int cmd_info(char *args) {
+    char *arg = strtok(NULL, " ");
+    if (arg == NULL) {
+        return 0;
+    }
+    if (strcmp(arg, "r") == 0) {
+        isa_reg_display();
+    }
+    return 0;
+}
 static int cmd_c(char *args) {
     cpu_exec(-1);
     return 0;
@@ -78,13 +89,13 @@ static struct {
     {"q", "Exit NEMU", cmd_q},
     {"s", "step in", cmd_si},
     {"si", "step in", cmd_si},
+    {"info", "Display register/watchpoint info", cmd_info},
 
     /* TODO: Add more commands */
 
 };
 
 #define NR_CMD ARRLEN(cmd_table)
-
 static int cmd_help(char *args) {
     /* extract the first argument */
     char *arg = strtok(NULL, " ");
