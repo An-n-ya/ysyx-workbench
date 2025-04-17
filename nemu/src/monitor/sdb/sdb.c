@@ -78,11 +78,17 @@ static int cmd_si(char *args) {
 
 static int cmd_x(char *args) {
     int number;
-    unsigned int address;
+    char e[128];
 
-    if (sscanf(args, "%d %x",&number, &address) != 2) {
-        fprintf(stderr, "输入格式错误，应为：<指令> <整数> <十六进制地址>\n");
+    if (sscanf(args, "%d %s",&number, e) != 2) {
+        fprintf(stderr, "输入格式错误，应为：<指令> <整数> <表达式>\n");
         return -1;
+    }
+    int address;
+    bool is_success;
+    address = expr(e, &is_success);
+    if (!is_success) {
+        fprintf(stderr, "failed to evaluate the expression: %s\n", e);
     }
     for (int i = 0; i < number; i++) {
         word_t w = paddr_read(address + 4 * i, 4);
