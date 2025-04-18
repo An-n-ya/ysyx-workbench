@@ -13,6 +13,7 @@
  * See the Mulan PSL v2 for more details.
  ***************************************************************************************/
 
+#include "common.h"
 #include "debug.h"
 #include <assert.h>
 #include <isa.h>
@@ -23,7 +24,7 @@
 #include <regex.h>
 
 // start from 256 to avoid collide with ascii
-enum { TK_NOTYPE = 256, TK_EQ, TK_NEQ, TK_AND, TK_OR, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_NUM, TK_PAREN_L, TK_PAREN_R };
+enum { TK_NOTYPE = 256, TK_REG, TK_VAR, TK_EQ, TK_NEQ, TK_AND, TK_OR, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_NUM, TK_PAREN_L, TK_PAREN_R };
 enum { PREC_EQ, PREC_LESS, PREC_GREAT};
 
 bool is_op(int type) {
@@ -87,10 +88,11 @@ static struct rule {
     {"\\(", TK_PAREN_L},      // minus
     {"\\)", TK_PAREN_R},      // minus
     {"\\/", TK_DIVIDE},   // divide
-    {"==", TK_EQ},        // equal
-    {"!=", TK_NEQ},        // equal
-    {"\\&\\&", TK_AND},        // equal
-    {"\\|\\|", TK_OR},        // equal
+    {"==", TK_EQ},       
+    {"!=", TK_NEQ},       
+    {"\\&\\&", TK_AND},       
+    {"\\|\\|", TK_OR},       
+    {"\\$[a-zA-Z0-9]+", TK_REG},       
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -201,14 +203,28 @@ bool check_parentheses(int start, int end) {
 }
 
 
-int eval(int start, int end) {
+word_t eval(int start, int end, bool *success) {
     if (start > end) {
-        return -1;
+        *success = false;
+        return 0;
     } else if (start == end) {
-        assert(tokens[end].type == TK_NUM);
+        assert(tokens[end].type == TK_NUM || tokens[end].type == TK_REG);
+        if (tokens[end].type == TK_REG) {
+            const char *name = tokens[end].str;
+            if (strcmp(name, "$pc") == 0) {
+                *success = true;
+                return cpu.pc;
+            }
+            int reg_idx = isa_reg_str2val(name, success);
+            if (!success) {
+                return 0;
+            }
+            *success = true;
+            return cpu.gpr[reg_idx];
+        }
         return parse_number(tokens[end].str);
     } else if (check_parentheses(start, end)) {
-        return eval(start + 1, end - 1);
+        return eval(start + 1, end - 1, success);
     } else {
         int main_op = 0;
         int op_loc = start;
@@ -243,8 +259,12 @@ int eval(int start, int end) {
             }
         }
         assert(op_loc > start && op_loc < end);
-        int val1 = eval(start, op_loc - 1);
-        int val2 = eval(op_loc + 1, end);
+        int val1 = eval(start, op_loc - 1, success);
+        int val2 = eval(op_loc + 1, end, success);
+        if (!success) {
+            return 0;
+        }
+        *success = true;
         switch (main_op) {
             case TK_PLUS: return val1 + val2;
             case TK_MINUS: return val1 - val2;
@@ -271,5 +291,5 @@ word_t expr(char *e, bool *success) {
     // for (int i = 0; i < nr_token; i++) {
     //     printf("type: %d, str: %s\n", tokens[i].type, tokens[i].str);
     // }
-    return eval(0, nr_token - 1);
+    return eval(0, nr_token - 1, success);
 }

@@ -14,6 +14,7 @@
  ***************************************************************************************/
 
 #include "sdb.h"
+#include "common.h"
 #include "debug.h"
 #include "memory/paddr.h"
 #include <cpu/cpu.h>
@@ -69,13 +70,23 @@ static int cmd_si(char *args) {
     char *endptr;
     long num = strtol(arg, &endptr, 10);
     if (*endptr != '\0') {
-        Log("failed to convert str to integer.");
+        fprintf(stderr,"Failed to convert str to integer.");
         return -1;
     }
     cpu_exec(num);
     return 0;
 }
 
+static int cmd_p(char *args) {
+    bool success = false;
+    word_t val = expr(args, &success);
+    if (success) {
+        printf("%ul\n", val);
+    } else {
+        fprintf(stderr, "Failed to evaluate this expression: %s", args);
+    }
+    return 0;
+}
 static int cmd_x(char *args) {
     int number;
     char e[128];
@@ -112,6 +123,7 @@ static struct {
     {"si", "Step in", cmd_si},
     {"info", "Display register/watchpoint info", cmd_info},
     {"x", "Print value stored in memmory", cmd_x},
+    {"p", "Print expreesion", cmd_p},
 
     /* TODO: Add more commands */
 
