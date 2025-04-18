@@ -23,7 +23,7 @@
 #include <regex.h>
 
 // start from 256 to avoid collide with ascii
-enum { TK_NOTYPE = 256, TK_EQ, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_NUM, TK_PAREN_L, TK_PAREN_R };
+enum { TK_NOTYPE = 256, TK_EQ, TK_NEQ, TK_AND, TK_OR, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_NUM, TK_PAREN_L, TK_PAREN_R };
 enum { PREC_EQ, PREC_LESS, PREC_GREAT};
 
 bool is_op(int type) {
@@ -32,6 +32,10 @@ bool is_op(int type) {
         case TK_MINUS:
         case TK_MULTIPLY:
         case TK_DIVIDE:
+        case TK_EQ:
+        case TK_NEQ:
+        case TK_AND:
+        case TK_OR:
             return true;
     }
     return false;
@@ -40,10 +44,16 @@ int get_prec(int type) {
     switch (type) {
         case TK_PLUS:
         case TK_MINUS:
-            return 1;
+            return 6;
         case TK_MULTIPLY:
         case TK_DIVIDE:
-            return 2;
+            return 5;
+        case TK_EQ:
+        case TK_NEQ:
+            return 7;
+        case TK_AND:
+        case TK_OR:
+            return 11;
     }
     Log("invalid type");
     return -1;
@@ -51,9 +61,9 @@ int get_prec(int type) {
 int prec_cmp(int t1, int t2) {
     int t1_prec = get_prec(t1);
     int t2_prec = get_prec(t2);
-    if (t1_prec > t2_prec) {
+    if (t1_prec < t2_prec) {
         return PREC_GREAT;
-    } else if (t1_prec < t2_prec) {
+    } else if (t1_prec > t2_prec) {
         return PREC_LESS;
     } else {
         return PREC_EQ;
@@ -78,6 +88,9 @@ static struct rule {
     {"\\)", TK_PAREN_R},      // minus
     {"\\/", TK_DIVIDE},   // divide
     {"==", TK_EQ},        // equal
+    {"!=", TK_NEQ},        // equal
+    {"\\&\\&", TK_AND},        // equal
+    {"\\|\\|", TK_OR},        // equal
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -151,7 +164,7 @@ static bool make_token(char *e) {
         }
 
         if (i == NR_REGEX) {
-            printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
+            fprintf(stderr, "no match at position %d\n%s\n%*.s^\n", position, e, position, "");
             return false;
         }
     }
@@ -237,6 +250,10 @@ int eval(int start, int end) {
             case TK_MINUS: return val1 - val2;
             case TK_MULTIPLY: return val1 * val2;
             case TK_DIVIDE: return val1 / val2;
+            case TK_EQ: return val1 == val2;
+            case TK_NEQ: return val1 != val2;
+            case TK_AND: return val1 && val2;
+            case TK_OR: return val1 || val2;
         }
     }
     return 0;

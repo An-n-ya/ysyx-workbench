@@ -23,11 +23,11 @@ void engine_start();
 int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
-    // bool a = false;
-    // word_t val = expr("0x8000 + 0x1000 * 2", &a);
-    // printf("expr val: %x\n", val);
-    // // expr("(800 + 0xfff) * 1 / 2", &a);
-    // return 0;
+    bool a = false;
+    word_t val = expr("1 && 0 || 0 != 0", &a);
+    printf("expr val: %x\n", val);
+    // expr("(800 + 0xfff) * 1 / 2", &a);
+    return 0;
   /* Initialize the monitor. */
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
