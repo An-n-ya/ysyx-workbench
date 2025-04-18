@@ -81,9 +81,9 @@ static int cmd_p(char *args) {
     bool success = false;
     word_t val = expr(args, &success);
     if (success) {
-        printf("%ul\n", val);
+        printf("%u\n", val);
     } else {
-        fprintf(stderr, "Failed to evaluate this expression: %s", args);
+        fprintf(stderr, "Failed to evaluate this expression: %s\n", args);
     }
     return 0;
 }

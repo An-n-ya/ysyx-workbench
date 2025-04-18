@@ -24,7 +24,7 @@ int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
     // bool a = false;
-    // word_t val = expr("$pc", &a);
+    // word_t val = expr("*0x80000000", &a);
     // printf("expr val: %x\n", val);
     // // expr("(800 + 0xfff) * 1 / 2", &a);
     // return 0;

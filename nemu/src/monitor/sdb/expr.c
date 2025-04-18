@@ -15,6 +15,7 @@
 
 #include "common.h"
 #include "debug.h"
+#include "memory/paddr.h"
 #include <assert.h>
 #include <isa.h>
 
@@ -22,9 +23,10 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+word_t expr(char *e, bool *success);
 
 // start from 256 to avoid collide with ascii
-enum { TK_NOTYPE = 256, TK_REG, TK_VAR, TK_EQ, TK_NEQ, TK_AND, TK_OR, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_NUM, TK_PAREN_L, TK_PAREN_R };
+enum { TK_NOTYPE = 256, TK_POINTER, TK_REG, TK_VAR, TK_EQ, TK_NEQ, TK_AND, TK_OR, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_NUM, TK_PAREN_L, TK_PAREN_R };
 enum { PREC_EQ, PREC_LESS, PREC_GREAT};
 
 bool is_op(int type) {
@@ -81,6 +83,7 @@ static struct rule {
      */
 
     {"(0[xX][0-9a-fA-F]+|0[bB][01]+|[0-9]+)", TK_NUM},
+    {"\\*\\S+", TK_POINTER},       
     {" +", TK_NOTYPE},    // spaces
     {"\\+", TK_PLUS},     // plus
     {"\\*", TK_MULTIPLY}, // multiply
@@ -208,8 +211,9 @@ word_t eval(int start, int end, bool *success) {
         *success = false;
         return 0;
     } else if (start == end) {
-        assert(tokens[end].type == TK_NUM || tokens[end].type == TK_REG);
-        if (tokens[end].type == TK_REG) {
+        int type = tokens[end].type;
+        assert(type == TK_NUM || type == TK_REG || type == TK_POINTER);
+        if (type == TK_REG) {
             const char *name = tokens[end].str;
             if (strcmp(name, "$pc") == 0) {
                 *success = true;
@@ -221,6 +225,16 @@ word_t eval(int start, int end, bool *success) {
             }
             *success = true;
             return cpu.gpr[reg_idx];
+        } else if (type == TK_POINTER) {
+            assert(tokens[end].str[0] == '*');
+            char *pointer_str = tokens[end].str + 1;
+            word_t address = expr(pointer_str, success);
+            if (!success) {
+                    return 0;
+            }
+            word_t w = paddr_read(address, 4);
+            *success = true;
+            return w;
         }
         return parse_number(tokens[end].str);
     } else if (check_parentheses(start, end)) {
