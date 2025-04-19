@@ -27,6 +27,9 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+void new_wp(const char* expr);
+void print_watchpoints();
+void delete_wp_by_id(int id);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char *rl_gets() {
@@ -53,6 +56,8 @@ static int cmd_info(char *args) {
     }
     if (strcmp(arg, "r") == 0) {
         isa_reg_display();
+    } else if (strcmp(arg, "w") == 0) {
+        print_watchpoints();
     }
     return 0;
 }
@@ -107,6 +112,19 @@ static int cmd_x(char *args) {
     }
     return 0;
 }
+static int cmd_w(char *args) { 
+    new_wp(args);
+    return 0; 
+}
+static int cmd_d(char *args) { 
+    int number;
+    if (sscanf(args, "%d",&number) != 1) {
+        fprintf(stderr, "输入格式错误，应为：<指令> <整数id>\n");
+        return -1;
+    }
+    delete_wp_by_id(number);
+    return 0; 
+}
 static int cmd_q(char *args) { return -1; }
 
 static int cmd_help(char *args);
@@ -124,6 +142,8 @@ static struct {
     {"info", "Display register/watchpoint info", cmd_info},
     {"x", "Print value stored in memmory", cmd_x},
     {"p", "Print expreesion", cmd_p},
+    {"w", "Add watchpoint", cmd_w},
+    {"d", "Delete watchpoint", cmd_d},
 
     /* TODO: Add more commands */
 

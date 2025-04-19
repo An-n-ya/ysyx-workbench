@@ -23,6 +23,7 @@ void engine_start();
 int is_exit_status_bad();
 
 int main(int argc, char *argv[]) {
+    // init_sdb();
     // bool a = false;
     // word_t val = expr("*0x80000000", &a);
     // printf("expr val: %x\n", val);
@@ -37,6 +38,9 @@ int main(int argc, char *argv[]) {
 
   /* Start engine. */
   engine_start();
+
+    // TODO: figure out a method to insert nemu command 
+    // programmatically for debugging convenience
 
   return is_exit_status_bad();
 }

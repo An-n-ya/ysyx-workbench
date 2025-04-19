@@ -14,14 +14,20 @@
 ***************************************************************************************/
 
 #include "sdb.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 #define NR_WP 32
+#define EXPR_LEN 256
 
 typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
 
   /* TODO: Add more members if necessary */
+  char str[EXPR_LEN];
+  bool is_free;
 
 } WP;
 
@@ -32,6 +38,7 @@ void init_wp_pool() {
   int i;
   for (i = 0; i < NR_WP; i ++) {
     wp_pool[i].NO = i;
+    wp_pool[i].is_free = true;
     wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
   }
 
@@ -39,5 +46,62 @@ void init_wp_pool() {
   free_ = wp_pool;
 }
 
-/* TODO: Implement the functionality of watchpoint */
+void cleal_wp(WP* wp) {
+    int i;
+    for (i = 0; i < EXPR_LEN; i++) {
+        wp->str[i] = 0;
+    }
+    wp->is_free = true;
+}
+
+void new_wp(const char* expr) {
+    assert(free_ != NULL);
+    WP* wp = free_;
+    free_ = wp->next;
+    wp->next = head;
+    wp->is_free = false;
+    strcpy(wp->str, expr);
+    head = wp;
+}
+
+
+void delete_wp(WP* wp) {
+    cleal_wp(wp);
+    if (wp == head) {
+        head = wp->next;
+    } else {
+        // find parent
+        WP* cur = head;
+        bool found = false;
+        while (cur != NULL) {
+            if (cur->next == wp) {
+                // found parent here
+                cur->next = wp->next;
+                found = true;
+            }
+        }
+        if (!found) {
+            fprintf(stderr, "Cannot find parent of this watchpoint.\n");
+        }
+    }
+    wp->next = free_;
+    free_ = wp;
+}
+void delete_wp_by_id(int id) {
+    WP* wp = &wp_pool[id];
+    if (wp->is_free) {
+        return;
+    }
+    delete_wp(wp);
+}
+
+void print_watchpoints() {
+    WP* cur = head;
+    printf("id\texpr\n");
+    while (cur != NULL) {
+        printf("%d\t%s\n", cur->NO, cur->str);
+        cur = cur->next;
+    }
+}
+
 
