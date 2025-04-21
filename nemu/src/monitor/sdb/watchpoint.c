@@ -13,10 +13,12 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "debug.h"
 #include "sdb.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <isa.h>
 
 #define NR_WP 32
 #define EXPR_LEN 256
@@ -102,6 +104,19 @@ void print_watchpoints() {
         printf("%d\t%s\n", cur->NO, cur->str);
         cur = cur->next;
     }
+}
+
+bool need_stop() {
+    WP* cur = head;
+    while (cur != NULL) {
+        bool success = false;
+        if (expr(cur->str, &success) != 0) {
+            printf("stopped at watchpoint %d, at: %s\n", cur->NO, cur->str);
+            return true;
+        }
+        cur = cur->next;
+    }
+    return false;
 }
 
 

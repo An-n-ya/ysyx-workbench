@@ -141,8 +141,8 @@ static bool make_token(char *e) {
                 char *substr_start = e + position;
                 int substr_len = pmatch.rm_eo;
 
-                Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", i, rules[i].regex,
-                    position, substr_len, substr_len, substr_start);
+                // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", i, rules[i].regex,
+                //     position, substr_len, substr_len, substr_start);
 
                 position += substr_len;
 
@@ -273,8 +273,8 @@ word_t eval(int start, int end, bool *success) {
             }
         }
         assert(op_loc > start && op_loc < end);
-        int val1 = eval(start, op_loc - 1, success);
-        int val2 = eval(op_loc + 1, end, success);
+        word_t val1 = eval(start, op_loc - 1, success);
+        word_t val2 = eval(op_loc + 1, end, success);
         if (!success) {
             return 0;
         }
