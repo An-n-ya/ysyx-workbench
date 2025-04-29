@@ -215,7 +215,7 @@ word_t eval(int start, int end, bool *success) {
         assert(type == TK_NUM || type == TK_REG || type == TK_POINTER);
         if (type == TK_REG) {
             const char *name = tokens[end].str;
-            if (strcmp(name, "$pc") == 0) {
+            if (strcmp(name, "$pc") == 0 || strcmp(name, "$PC") == 0) {
                 *success = true;
                 return cpu.pc;
             }
