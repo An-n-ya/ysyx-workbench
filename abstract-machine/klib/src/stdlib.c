@@ -1,45 +1,65 @@
 #include <am.h>
-#include <klib.h>
 #include <klib-macros.h>
+#include <klib.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 static unsigned long int next = 1;
 
 int rand(void) {
-  // RAND_MAX assumed to be 32767
-  next = next * 1103515245 + 12345;
-  return (unsigned int)(next/65536) % 32768;
+    // RAND_MAX assumed to be 32767
+    next = next * 1103515245 + 12345;
+    return (unsigned int)(next / 65536) % 32768;
 }
 
-void srand(unsigned int seed) {
-  next = seed;
+void srand(unsigned int seed) { next = seed; }
+
+int abs(int x) { return (x < 0 ? -x : x); }
+
+int atoi(const char *nptr) {
+    int x = 0;
+    while (*nptr == ' ') {
+        nptr++;
+    }
+    while (*nptr >= '0' && *nptr <= '9') {
+        x = x * 10 + *nptr - '0';
+        nptr++;
+    }
+    return x;
 }
 
-int abs(int x) {
-  return (x < 0 ? -x : x);
-}
+void itoa(int value, char *str) {
+    char *p = str;
+    int is_neg = 0;
+    if (value < 0) {
+        is_neg = 1;
+        value = -value;
+    }
+    char buf[20];
+    int i = 0;
+    do {
+        buf[i++] = (value % 10) + '0';
+        value /= 10;
+    } while (value);
 
-int atoi(const char* nptr) {
-  int x = 0;
-  while (*nptr == ' ') { nptr ++; }
-  while (*nptr >= '0' && *nptr <= '9') {
-    x = x * 10 + *nptr - '0';
-    nptr ++;
-  }
-  return x;
+    if (is_neg) {
+        *p++ = '-';
+    }
+    while (i--) {
+        *p++ = buf[i];
+    }
+    *p = '\0';
 }
 
 void *malloc(size_t size) {
-  // On native, malloc() will be called during initializaion of C runtime.
-  // Therefore do not call panic() here, else it will yield a dead recursion:
-  //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
+    // On native, malloc() will be called during initializaion of C runtime.
+    // Therefore do not call panic() here, else it will yield a dead recursion:
+    //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-  panic("Not implemented");
+    panic("Not implemented");
 #endif
-  return NULL;
+    return NULL;
 }
 
-void free(void *ptr) {
-}
+void free(void *ptr) {}
 
 #endif
