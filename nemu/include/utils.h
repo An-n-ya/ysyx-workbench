@@ -22,10 +22,16 @@
 
 enum { NEMU_RUNNING, NEMU_STOP, NEMU_END, NEMU_ABORT, NEMU_QUIT };
 
+#define IRINGBUF_SIZE 20
+
 typedef struct {
   int state;
   vaddr_t halt_pc;
   uint32_t halt_ret;
+#ifdef CONFIG_IRINGBUF
+  char iringbuf[IRINGBUF_SIZE][128];
+  int iring_ind;
+#endif
 } NEMUState;
 
 extern NEMUState nemu_state;
@@ -35,6 +41,10 @@ extern NEMUState nemu_state;
 uint64_t get_time();
 
 // ----------- log -----------
+
+#ifdef CONFIG_IRINGBUF
+void print_iringbuf();
+#endif
 
 #define ANSI_FG_BLACK   "\33[1;30m"
 #define ANSI_FG_RED     "\33[1;31m"

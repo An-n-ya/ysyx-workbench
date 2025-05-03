@@ -39,8 +39,5 @@ int main(int argc, char *argv[]) {
   /* Start engine. */
   engine_start();
 
-    // TODO: figure out a method to insert nemu command 
-    // programmatically for debugging convenience
-
   return is_exit_status_bad();
 }
