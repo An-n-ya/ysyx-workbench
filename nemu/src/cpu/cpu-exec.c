@@ -40,7 +40,8 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
 #ifdef CONFIG_IRINGBUF
-    int ind = nemu_state.iring_ind++;
+    int ind = nemu_state.iring_ind;
+    nemu_state.iring_ind = (nemu_state.iring_ind + 1) % IRINGBUF_SIZE;
     strcpy(nemu_state.iringbuf[ind], _this->logbuf);
 #endif
 
