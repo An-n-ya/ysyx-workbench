@@ -22,6 +22,7 @@ void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
+void init_elf(const char *elf_file);
 void init_disasm();
 
 static void welcome() {
@@ -40,6 +41,7 @@ static void welcome() {
 
 void sdb_set_batch_mode();
 
+static char *symbol_file = NULL;
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
@@ -69,18 +71,25 @@ static long load_img() {
 
 static int parse_args(int argc, char *argv[]) {
     const struct option table[] = {
-        {"batch", no_argument, NULL, 'b'},      {"log", required_argument, NULL, 'l'},
-        {"diff", required_argument, NULL, 'd'}, {"port", required_argument, NULL, 'p'},
-        {"help", no_argument, NULL, 'h'},       {0, 0, NULL, 0},
+        {"batch", no_argument, NULL, 'b'},
+        {"log", required_argument, NULL, 'l'},
+        {"diff", required_argument, NULL, 'd'},
+        {"port", required_argument, NULL, 'p'},
+        {"symbol", required_argument, NULL, 's'},
+        {"help", no_argument, NULL, 'h'},
+        {0, 0, NULL, 0},
     };
     int o;
-    while ((o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
+    while ((o = getopt_long(argc, argv, "-bhl:d:p:s:", table, NULL)) != -1) {
         switch (o) {
         case 'b':
             sdb_set_batch_mode();
             break;
         case 'p':
             sscanf(optarg, "%d", &difftest_port);
+            break;
+        case 's':
+            symbol_file = optarg;
             break;
         case 'l':
             log_file = optarg;
@@ -95,6 +104,7 @@ static int parse_args(int argc, char *argv[]) {
             printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
             printf("\t-b,--batch              run with batch mode\n");
             printf("\t-l,--log=FILE           output log to FILE\n");
+            printf("\t-s,--symbol=FILE        specify symbol file\n");
             printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
             printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
             printf("\n");
@@ -121,6 +131,9 @@ void init_monitor(int argc, char *argv[]) {
 
     /* Initialize devices. */
     IFDEF(CONFIG_DEVICE, init_device());
+
+    /* Initialize elf. */
+    IFDEF(CONFIG_FTRACE, init_elf(symbol_file));
 
     /* Perform ISA dependent initialization. */
     init_isa();
