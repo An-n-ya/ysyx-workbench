@@ -16,6 +16,7 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include "uthash.h"
 #include <common.h>
 
 // ----------- state -----------
@@ -35,6 +36,17 @@ typedef struct {
 } NEMUState;
 
 extern NEMUState nemu_state;
+
+#ifdef CONFIG_FTRACE
+
+typedef struct {
+    paddr_t addr;
+    char func_name[128];
+    UT_hash_handle hh;
+} HashItem;
+
+extern HashItem *func_sym_table;
+#endif
 
 // ----------- timer -----------
 

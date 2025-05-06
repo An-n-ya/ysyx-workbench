@@ -55,6 +55,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, sword
   }
 }
 
+
 static int decode_exec(Decode *s) {
   s->dnpc = s->snpc;
 
