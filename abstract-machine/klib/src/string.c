@@ -54,7 +54,7 @@ int strcmp(const char *s1, const char *s2) {
 
 int strncmp(const char *s1, const char *s2, size_t n) { panic("Not implemented"); }
 
-void *memset(void *s, int c, size_t n) { 
+void *memset(void *s, int c, size_t n) {
     char *src = (char *)s;
     for (int i = 0; i < n; i++) {
         src[i] = c;
