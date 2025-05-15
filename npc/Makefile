@@ -2,8 +2,20 @@ BUILD_DIR = ./build
 
 PRJ = playground
 
+VERI_PRJ = $(PRJ)/csrc
+VERI_DIR = ./verilator
+
 test:
 	mill -i $(PRJ).test
+
+verilator: verilog
+	mkdir -p $(VERI_PRJ)
+	mkdir -p $(VERI_DIR)
+	verilator -cc $(BUILD_DIR)/Example.sv --exe $(VERI_PRJ)/main.cpp --trace --Mdir $(VERI_DIR)
+	make -j -C $(VERI_DIR) -f VExample.mk VExample
+	rm -rf logs
+	mkdir -p logs
+	$(VERI_DIR)/VExample
 
 verilog:
 	$(call git_commit, "generate verilog")
@@ -27,6 +39,7 @@ idea:
 
 clean:
 	-rm -rf $(BUILD_DIR)
+	-rm -rf $(VERI_DIR)
 
 .PHONY: test verilog help reformat checkformat clean
 
