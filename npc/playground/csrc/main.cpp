@@ -1,27 +1,50 @@
-#include "VExample.h"
+#include "VNPC.h"
 #include "verilated.h"
 #include "verilated_vcd_c.h"
 #include <cassert>
+#include <cstdio>
+#include <sys/types.h>
+
+u_int32_t PMEM[4096];
+
+void init_pmem() { 
+    PMEM[0] = 0x01008093; // addi x1, x1, 16
+    PMEM[1] = 0x01410113; // addi x2, x2, 20 
+    PMEM[2] = 0xffc18193; // addi x3, x3, -4
+}
+
+u_int32_t pmem_read(u_int32_t pc) {
+    if (pc % 4 != 0) {
+        fprintf(stderr, "pc is not align to 4, got pc: %x", pc);
+        exit(-1);
+    }
+    return PMEM[pc / 4];
+}
 
 int main(int argc, char **argv, char **env) {
     Verilated::commandArgs(argc, argv);
     VerilatedVcdC *m_trace = new VerilatedVcdC;
     const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
     contextp->traceEverOn(true);
-    VExample *top = new VExample;
+    VNPC *top = new VNPC;
     top->trace(m_trace, 5);
     m_trace->open("logs/vlt_dump.vcd");
-    int total_cycle = 100;
+    init_pmem();
+    int total_cycle = 3;
     while (!Verilated::gotFinish()) {
         for (int i = 0; i <= total_cycle; i++) {
-            int a = rand() & 1;
-            int b = rand() & 1;
-            top->io_a = a;
-            top->io_b = b;
+            printf("cycle %d begin\n", i);
+            top->clock = 0;
+            top->io_inst = pmem_read(top->io_pc);
             top->eval();
+            top->clock = 1;
+            top->io_inst = pmem_read(top->io_pc);
+            top->eval();
+            printf("cycle %d finished\n", i);
+            printf("==================\n");
             m_trace->dump(i);
-            printf("a = %d, b = %d, f = %d\n", a, b, top->io_f);
-            assert(top->io_f == (a ^ b));
+            /*printf("a = %d, b = %d, f = %d\n", a, b, top->io_f);*/
+            /*assert(top->io_f == (a ^ b));*/
         }
         break;
     }
