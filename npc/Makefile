@@ -5,6 +5,7 @@ PRJ = playground
 VERI_PRJ = $(PRJ)/csrc
 VERI_DIR = ./verilator
 VERI_TARGET = NPC
+VERI_SRC = $(BUILD_DIR)/$(VERI_TARGET).sv
 
 test:
 	mill -i $(PRJ).test
@@ -12,16 +13,16 @@ test:
 verilator: verilog
 	mkdir -p $(VERI_PRJ)
 	mkdir -p $(VERI_DIR)
-	verilator  -cc $(BUILD_DIR)/$(VERI_TARGET).sv --exe $(VERI_PRJ)/main.cpp --trace --Mdir $(VERI_DIR)
-	make -j -C $(VERI_DIR) -f V$(VERI_TARGET).mk V$(VERI_TARGET)
 	rm -rf logs
 	mkdir -p logs
+	verilator  -cc $(BUILD_DIR)/$(VERI_TARGET).sv  --exe $(VERI_PRJ)/main.cpp --trace --build --Mdir $(VERI_DIR)
 	$(VERI_DIR)/V$(VERI_TARGET)
 
 verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
+	sed -i '$$d' $(VERI_SRC)
 
 help:
 	mill -i $(PRJ).runMain Elaborate --help

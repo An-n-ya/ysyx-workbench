@@ -5,7 +5,7 @@ import chisel3.util._
 import common.Consts._
 import common.Instructions._
 
-class NPC extends Module {
+class NPC extends Module{
   val io      = IO(new Bundle {
     val inst = Input(UInt(WORD_LEN.W))
     val pc   = Output(UInt(WORD_LEN.W))
@@ -13,6 +13,9 @@ class NPC extends Module {
   val regfile = Mem(32, UInt(WORD_LEN.W))
   val pc_reg  = RegInit(START_ADDR)
   val inst    = Reg(UInt())
+  val ebreak_flg    = Wire(Bool())
+  val ebreak_mod = Module(new Ebreak)
+  ebreak_mod.io.en := ebreak_flg
   inst := io.inst
 
   // IF
@@ -93,7 +96,8 @@ class NPC extends Module {
       CSRRSI -> List(ALU_COPY1, OP1_IMZ, OP2_X, MEN_X, REN_S, WB_CSR, CSR_S),
       CSRRC  -> List(ALU_COPY1, OP1_RS1, OP2_X, MEN_X, REN_S, WB_CSR, CSR_C),
       CSRRCI -> List(ALU_COPY1, OP1_IMZ, OP2_X, MEN_X, REN_S, WB_CSR, CSR_C),
-      ECALL  -> List(ALU_X, OP1_X, OP2_X, MEN_X, REN_X, WB_X, CSR_E)
+      ECALL  -> List(ALU_X, OP1_X, OP2_X, MEN_X, REN_X, WB_X, CSR_E),
+      EBREAK -> List(ALU_EBREAK, OP1_X, OP2_X, MEN_X, REN_X, WB_X, CSR_E)
     )
   )
   val exe_fun :: op1_sel :: op2_sel :: mem_wen :: rf_wen :: wb_sel :: csr_cmd :: Nil =
@@ -133,7 +137,7 @@ class NPC extends Module {
       (exe_fun === ALU_SLTU)  -> (op1_data < op2_data).asUInt,
       (exe_fun === ALU_JALR)  -> ((op1_data + op2_data) & (~(1
         .U(WORD_LEN.W))).asUInt),
-      (exe_fun === ALU_COPY1) -> op1_data
+      (exe_fun === ALU_COPY1) -> op1_data,
     )
   )
   br_flg    := MuxCase(
@@ -147,6 +151,7 @@ class NPC extends Module {
       (exe_fun === BR_BGEU) -> !(op1_data < op2_data)
     )
   )
+  ebreak_flg := false.B
   br_target := pc_reg + imm_b_sext
 
   // WB
@@ -154,6 +159,9 @@ class NPC extends Module {
 
   when(rf_wen === REN_S) {
     regfile(wb_addr) := wb_data
+  }
+  when(exe_fun === ALU_EBREAK) {
+    ebreak_flg := true.B
   }
   printf(p"pc_reg: 0x${Hexadecimal(pc_reg)}\n")
   printf(p"instruction: 0x${Hexadecimal(inst)}\n")

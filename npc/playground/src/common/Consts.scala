@@ -31,6 +31,7 @@ object Consts {
   val ALU_VADDVV  = 19.U(EXE_FUN_LEN.W)
   val VSET        = 20.U(EXE_FUN_LEN.W)
   val ALU_PCNT    = 21.U(EXE_FUN_LEN.W)
+  val ALU_EBREAK  = 22.U(EXE_FUN_LEN.W)
 
   val OP1_LEN = 2
   val OP1_RS1 = 0.U(OP1_LEN.W)
