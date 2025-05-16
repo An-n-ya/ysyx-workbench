@@ -166,4 +166,8 @@ class NPC extends Module{
   printf(p"pc_reg: 0x${Hexadecimal(pc_reg)}\n")
   printf(p"instruction: 0x${Hexadecimal(inst)}\n")
   printf(p"alu_out: 0x${Hexadecimal(alu_out)}\n")
+  var i = 0
+  for (i <- 0 until 32 if i % 4 == 0) {
+    printf(p"${REGS(i)}: 0x${Hexadecimal(regfile(i))}\t${REGS(i+1)}: 0x${Hexadecimal(regfile(i+1))}\t${REGS(i+2)}: 0x${Hexadecimal(regfile(i+2))}\t${REGS(i+3)}: 0x${Hexadecimal(regfile(i+3))}\t\n")
+  }
 }
