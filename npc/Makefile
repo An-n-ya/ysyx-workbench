@@ -22,7 +22,7 @@ verilog:
 	$(call git_commit, "generate verilog")
 	mkdir -p $(BUILD_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
-	sed -i '$$d' $(VERI_SRC)
+	sed -i '/firrtl_black_box_resource_files.f/{N;N;d;}' $(VERI_SRC) # remove wired firrtl_black_box_resource_files.f
 
 help:
 	mill -i $(PRJ).runMain Elaborate --help
