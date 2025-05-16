@@ -50,10 +50,10 @@ class NPC extends Module{
   val imm_u_shifted = Cat(imm_u, Fill(12, 0.U))
   val imm_z         = inst(19, 15)
   val imm_z_uext    = Cat(Fill(27, 0.U), imm_z)
-  // val rs1_data      =
-  //   Mux((rs1_addr =/= 0.U(WORD_LEN.W)), regfile(rs1_addr), 0.U(WORD_LEN.W))
-  // val rs2_data      =
-  //   Mux((rs2_addr =/= 0.U(WORD_LEN.W)), regfile(rs2_addr), 0.U(WORD_LEN.W))
+  val rs1_data      =
+    Mux((rs1_addr =/= 0.U(WORD_LEN.W)), regfile(rs1_addr), 0.U(WORD_LEN.W))
+  val rs2_data      =
+    Mux((rs2_addr =/= 0.U(WORD_LEN.W)), regfile(rs2_addr), 0.U(WORD_LEN.W))
 
   val csignals                                                                       = ListLookup(
     inst,
@@ -106,14 +106,14 @@ class NPC extends Module{
   val op1_data = MuxCase(
     0.U(WORD_LEN.W),
     Seq(
-      // (op1_sel === OP1_RS1) -> rs1_data,
+      (op1_sel === OP1_RS1) -> rs1_data,
       (op1_sel === OP1_PC) -> pc_reg
     )
   )
   val op2_data = MuxCase(
     0.U(WORD_LEN.W),
     Seq(
-      // (op2_sel === OP2_RS2) -> rs2_data,
+      (op2_sel === OP2_RS2) -> rs2_data,
       (op2_sel === OP2_IMI) -> imm_i_sext,
       (op2_sel === OP2_IMS) -> imm_s_sext,
       (op2_sel === OP2_IMJ) -> imm_j_sext,

@@ -18,7 +18,8 @@ void init_pmem() {
     PMEM[0] = 0x01008093; // addi x1, x1, 16
     PMEM[1] = 0x01410113; // addi x2, x2, 20 
     PMEM[2] = 0xffc18193; // addi x3, x3, -4
-    PMEM[3] = 0x00100073; // ebreak
+    PMEM[3] = 0xffc10513; // addi x10, x2, -4
+    PMEM[4] = 0x00100073; // ebreak
 }
 
 u_int32_t pmem_read(u_int32_t pc) {
