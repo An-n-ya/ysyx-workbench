@@ -15,7 +15,7 @@ verilator: verilog
 	mkdir -p $(VERI_DIR)
 	rm -rf logs
 	mkdir -p logs
-	verilator  -cc $(BUILD_DIR)/$(VERI_TARGET).sv  --exe $(VERI_PRJ)/main.cpp --trace --build --Mdir $(VERI_DIR)
+	verilator  -cc $(BUILD_DIR)/$(VERI_TARGET).sv  --exe $(VERI_PRJ)/main.cpp $(VERI_PRJ)/engine.cpp --trace --build --Mdir $(VERI_DIR)
 	$(VERI_DIR)/V$(VERI_TARGET)
 
 verilog:
