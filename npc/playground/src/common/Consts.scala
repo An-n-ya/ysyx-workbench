@@ -8,7 +8,7 @@ object Consts {
                       "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
                       "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6")
   val WORD_LEN     = 32
-  val START_ADDR   = 0.U(WORD_LEN.W)
+  val START_ADDR   = "h80000000".U(WORD_LEN.W)
   val CSR_ADDR_LEN = 12
 
   val EXE_FUN_LEN = 5

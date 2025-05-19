@@ -6,17 +6,19 @@ VERI_PRJ = $(PRJ)/csrc
 VERI_DIR = ./verilator
 VERI_TARGET = NPC
 VERI_SRC = $(BUILD_DIR)/$(VERI_TARGET).sv
+IMG ?=
+ARGS ?=
 
 test:
 	mill -i $(PRJ).test
 
-verilator: verilog
+run: verilog
 	mkdir -p $(VERI_PRJ)
 	mkdir -p $(VERI_DIR)
 	rm -rf logs
 	mkdir -p logs
 	verilator  -cc $(BUILD_DIR)/$(VERI_TARGET).sv  --exe $(VERI_PRJ)/main.cpp $(VERI_PRJ)/engine.cpp --trace --build --Mdir $(VERI_DIR)
-	$(VERI_DIR)/V$(VERI_TARGET)
+	@$(VERI_DIR)/V$(VERI_TARGET) $(IMG) $(ARGS)
 
 verilog:
 	$(call git_commit, "generate verilog")

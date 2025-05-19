@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <sys/types.h>
 
-#include "engine.hpp"
 #include "common.h"
+#include "engine.hpp"
 
 bool npc_exit = false;
 
@@ -13,7 +13,7 @@ void ebreak() {
     printf("ebreak!\n");
 }
 
-int main(int argc, char **argv, char **env) { 
-    Engine engine; 
+int main(int argc, char **argv, char **env) {
+    Engine engine(argc, argv);
     engine.loop();
 }

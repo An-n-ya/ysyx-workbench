@@ -30,12 +30,16 @@ void Engine::parse_args(int argc, char *argv[]) {
             break;
         case 's':
             symbol_file = optarg;
+            printf("symbol file: %s\n", symbol_file);
             break;
         case 'l':
             log_file = optarg;
+            printf("log file: %s\n", log_file);
             break;
         case 1:
             img_file = optarg;
+            printf("loaded img file: %s\n", img_file);
+            break;
         default:
             printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
             printf("\t-b,--batch              run with batch mode\n");
@@ -48,20 +52,7 @@ void Engine::parse_args(int argc, char *argv[]) {
     }
 }
 
-void Engine::init_pmem() {
-    PMEM[0] = 0x01008093; // addi x1, x1, 16
-    PMEM[1] = 0x01410113; // addi x2, x2, 20
-    PMEM[2] = 0xffc18193; // addi x3, x3, -4
-    PMEM[3] = 0xffc10513; // addi x10, x2, -4
-    PMEM[4] = 0x00100073; // ebreak
-}
-u_int32_t Engine::pmem_read(u_int32_t pc) {
-    if (pc % 4 != 0) {
-        fprintf(stderr, "pc is not align to 4, got pc: %x", pc);
-        exit(-1);
-    }
-    return PMEM[pc / 4];
-}
+
 
 void Engine::setup_trace() {
     m_trace = new VerilatedVcdC;
@@ -70,17 +61,30 @@ void Engine::setup_trace() {
     m_trace->open("logs/vlt_dump.vcd");
 }
 
-Engine::Engine() {
+Engine::Engine(int argc, char **argv) {
     top = new VNPC;
-    init_pmem();
+    parse_args(argc, argv);
+    mem.init_pmem(img_file);
     setup_trace();
     cycle_cnt = 0;
 }
-Engine::~Engine() {
-    m_trace->close();
+Engine::~Engine() { m_trace->close(); }
+
+void Engine::reset() {
+    top->clock = 0;
+    top->reset = 1;
+    top->eval();
+    top->clock = 1;
+    top->reset = 1;
+    top->eval();
+    top->clock = 1;
+    top->reset = 0;
+    top->eval();
+    printf("reset complete\n");
 }
 
 void Engine::loop() {
+    reset();
     while (!npc_exit && !Verilated::gotFinish()) {
         contextp->timeInc(1);
         printf("cycle %d begin\n", cycle_cnt);
@@ -103,4 +107,3 @@ void Engine::loop() {
         /*assert(top->io_f == (a ^ b));*/
     }
 }
-
