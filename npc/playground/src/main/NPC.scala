@@ -5,23 +5,22 @@ import chisel3.util._
 import common.Consts._
 import common.Instructions._
 
-class NPC extends Module{
-  val io      = IO(new Bundle {
+class NPC extends Module {
+  val io         = IO(new Bundle {
     val inst = Input(UInt(WORD_LEN.W))
     val pc   = Output(UInt(WORD_LEN.W))
   })
-  val regfile = Mem(32, UInt(WORD_LEN.W))
-  val pc_reg  = RegInit(START_ADDR)
-  val inst    = Reg(UInt())
-  val ebreak_flg    = Wire(Bool())
+  val regfile    = Mem(32, UInt(WORD_LEN.W))
+  val pc_reg     = RegInit(START_ADDR)
+  val ebreak_flg = Wire(Bool())
   val ebreak_mod = Module(new Ebreak)
   ebreak_mod.io.en := ebreak_flg
-  inst := io.inst
+  val inst = io.inst
 
   // IF
   val pc_plus4  = pc_reg + 4.U(WORD_LEN.W)
   val br_flg    = Wire(Bool())
-  val jmp_flg   = inst === JAL || inst === JALR
+  val jmp_flg   = (inst === JAL || inst === JALR)
   val br_target = Wire(UInt(WORD_LEN.W))
   val alu_out   = Wire(UInt(WORD_LEN.W))
   val pc_next   = MuxCase(
@@ -107,7 +106,7 @@ class NPC extends Module{
     0.U(WORD_LEN.W),
     Seq(
       (op1_sel === OP1_RS1) -> rs1_data,
-      (op1_sel === OP1_PC) -> pc_reg
+      (op1_sel === OP1_PC)  -> pc_reg
     )
   )
   val op2_data = MuxCase(
@@ -122,7 +121,7 @@ class NPC extends Module{
   )
 
   // EX
-  alu_out   := MuxCase(
+  alu_out    := MuxCase(
     0.U(WORD_LEN.W),
     Seq(
       (exe_fun === ALU_ADD)   -> (op1_data + op2_data),
@@ -137,10 +136,10 @@ class NPC extends Module{
       (exe_fun === ALU_SLTU)  -> (op1_data < op2_data).asUInt,
       (exe_fun === ALU_JALR)  -> ((op1_data + op2_data) & (~(1
         .U(WORD_LEN.W))).asUInt),
-      (exe_fun === ALU_COPY1) -> op1_data,
+      (exe_fun === ALU_COPY1) -> op1_data
     )
   )
-  br_flg    := MuxCase(
+  br_flg     := MuxCase(
     false.B,
     Seq(
       (exe_fun === BR_BEQ)  -> (op1_data === op2_data),
@@ -152,10 +151,15 @@ class NPC extends Module{
     )
   )
   ebreak_flg := false.B
-  br_target := pc_reg + imm_b_sext
+  br_target  := pc_reg + imm_b_sext
 
   // WB
-  val wb_data = alu_out
+  val wb_data = MuxCase(
+    alu_out,
+    Seq(
+      (wb_sel === WB_PC) -> pc_plus4
+    )
+  )
 
   when(rf_wen === REN_S) {
     regfile(wb_addr) := wb_data
@@ -163,11 +167,21 @@ class NPC extends Module{
   when(exe_fun === ALU_EBREAK) {
     ebreak_flg := true.B
   }
-  printf(p"pc_reg: 0x${Hexadecimal(pc_reg)}\n")
-  printf(p"instruction: 0x${Hexadecimal(inst)}\n")
+  printf(p"pc_reg: 0x${Hexadecimal(io.pc)}\n")
+  printf(p"instruction: 0x${Hexadecimal(io.inst)}\n")
+  printf(p"imm_j: 0x${Hexadecimal(imm_j_sext)}\n")
   printf(p"alu_out: 0x${Hexadecimal(alu_out)}\n")
-  var i = 0
-  for (i <- 0 until 32 if i % 4 == 0) {
-    printf(p"${REGS(i)}: 0x${Hexadecimal(regfile(i))}\t${REGS(i+1)}: 0x${Hexadecimal(regfile(i+1))}\t${REGS(i+2)}: 0x${Hexadecimal(regfile(i+2))}\t${REGS(i+3)}: 0x${Hexadecimal(regfile(i+3))}\t\n")
-  }
+  printf(p"exe_fun: 0x${exe_fun}\n")
+  printf(p"exe_fun == ALU_ADD: 0x${exe_fun === ALU_ADD}\n")
+  printf(
+    p"op2_data: 0x${Hexadecimal(op2_data)} op1_data: 0x${Hexadecimal(op1_data)} alu_out: 0x${Hexadecimal(alu_out)}\n"
+  )
+  printf(p"pc_next: 0x${Hexadecimal(pc_next)}\n")
+  printf(p"jmp_flag: 0x${jmp_flg}\n")
+  // var i = 0
+  // for (i <- 0 until 32 if i % 4 == 0) {
+  //   printf(p"${REGS(i)}: 0x${Hexadecimal(regfile(i))}\t${REGS(i + 1)}: 0x${Hexadecimal(regfile(i + 1))}\t${REGS(
+  //       i + 2
+  //     )}: 0x${Hexadecimal(regfile(i + 2))}\t${REGS(i + 3)}: 0x${Hexadecimal(regfile(i + 3))}\t\n")
+  // }
 }

@@ -52,8 +52,6 @@ void Engine::parse_args(int argc, char *argv[]) {
     }
 }
 
-
-
 void Engine::setup_trace() {
     m_trace = new VerilatedVcdC;
     contextp->traceEverOn(true);
@@ -95,14 +93,16 @@ void Engine::loop() {
         contextp->timeInc(1);
         top->clock = 1;
         top->io_inst = pmem_read(top->io_pc);
+        printf("[npc] pc: %08x ", top->io_pc);
+        printf("[npc] inst: %08x\n", top->io_inst);
         top->eval();
         printf("cycle %d finished\n", cycle_cnt);
         printf("==================\n");
         m_trace->dump(cycle_cnt);
         cycle_cnt++;
-        if (cycle_cnt > 6) {
-            return;
-        }
+        /*if (cycle_cnt > 6) {*/
+        /*    return;*/
+        /*}*/
         /*printf("a = %d, b = %d, f = %d\n", a, b, top->io_f);*/
         /*assert(top->io_f == (a ^ b));*/
     }
