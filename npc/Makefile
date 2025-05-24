@@ -9,15 +9,18 @@ VERI_SRC = $(BUILD_DIR)/$(VERI_TARGET).sv
 IMG ?=
 ARGS ?=
 
+CFLAGS ?=
+
 test:
 	mill -i $(PRJ).test
 
-run: verilog
+run: verilog $(LIBCAPSTONE)
 	mkdir -p $(VERI_PRJ)
 	mkdir -p $(VERI_DIR)
 	rm -rf logs
 	mkdir -p logs
-	verilator  -cc $(BUILD_DIR)/$(VERI_TARGET).sv  --exe $(VERI_PRJ)/main.cpp $(VERI_PRJ)/engine.cpp --trace --build --Mdir $(VERI_DIR)
+	verilator -cc $(BUILD_DIR)/$(VERI_TARGET).sv --exe $(VERI_PRJ)/main.cpp $(VERI_PRJ)/engine.cpp --trace   --Mdir $(VERI_DIR)
+	make -j -C ./verilator -f ../Makefile_obj
 	@$(VERI_DIR)/V$(VERI_TARGET) $(IMG) $(ARGS)
 
 verilog:
@@ -25,6 +28,12 @@ verilog:
 	mkdir -p $(BUILD_DIR)
 	mill -i $(PRJ).runMain Elaborate --target-dir $(BUILD_DIR)
 	sed -i '/firrtl_black_box_resource_files.f/{N;N;d;}' $(VERI_SRC) # remove wired firrtl_black_box_resource_files.f
+
+LIBCAPSTONE = tools/capstone/repo/libcapstone.so.5
+src/utils/disasm.c: $(LIBCAPSTONE)
+$(LIBCAPSTONE):
+	$(MAKE) -C tools/capstone
+
 
 help:
 	mill -i $(PRJ).runMain Elaborate --help

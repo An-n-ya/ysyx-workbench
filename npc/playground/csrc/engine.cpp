@@ -95,6 +95,8 @@ void Engine::loop() {
         top->io_inst = pmem_read(top->io_pc);
         printf("[npc] pc: %08x ", top->io_pc);
         printf("[npc] inst: %08x\n", top->io_inst);
+        disasm.disasm(top->io_pc, (uint8_t *)&(top->io_inst));
+        printf("[npc] disasm: %s\n", disasm.out());
         top->eval();
         printf("cycle %d finished\n", cycle_cnt);
         printf("==================\n");
