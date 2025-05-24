@@ -6,15 +6,17 @@ import common.Consts._
 import common.Instructions._
 
 class NPC extends Module {
-  val io         = IO(new Bundle {
+  val io              = IO(new Bundle {
     val inst = Input(UInt(WORD_LEN.W))
     val pc   = Output(UInt(WORD_LEN.W))
   })
-  val regfile    = Mem(32, UInt(WORD_LEN.W))
-  val pc_reg     = RegInit(START_ADDR)
-  val ebreak_flg = Wire(Bool())
-  val ebreak_mod = Module(new Ebreak)
+  val regfile         = Mem(32, UInt(WORD_LEN.W))
+  val pc_reg          = RegInit(START_ADDR)
+  val ebreak_code_reg = RegInit(0.U)
+  val ebreak_flg      = Wire(Bool())
+  val ebreak_mod      = Module(new Ebreak)
   ebreak_mod.io.en := ebreak_flg
+  ebreak_mod.io.in := ebreak_code_reg
   val inst = io.inst
 
   // IF
@@ -165,7 +167,8 @@ class NPC extends Module {
     regfile(wb_addr) := wb_data
   }
   when(exe_fun === ALU_EBREAK) {
-    ebreak_flg := true.B
+    ebreak_flg      := true.B
+    ebreak_code_reg := regfile(10)
   }
   printf(p"pc_reg: 0x${Hexadecimal(io.pc)}\n")
   printf(p"instruction: 0x${Hexadecimal(io.inst)}\n")
